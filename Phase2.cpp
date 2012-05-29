@@ -37,7 +37,7 @@ int N;
 int T;
 double lambda;
 long int size;
-int channelavailable;
+int channelavailable = 1;
 int flag = 0;
 int throughput;
 
@@ -78,9 +78,15 @@ void WaitForNext(int h) {
         DIFS[h] = 10;
         double u;
         u = drand48();
-        FrameLength[h] = (1544 * u);
+        double y = (1544*u);
+        double x = .07254;
+        FrameLength[h] = y;
+
         //FrameLength[h] = ((-1/lambda)*log(1-u));
-        TransTime[h] = FrameLength[h] * (112/1544);
+        //double y = FrameLength[h] * x;
+        double z = (y*x);
+        TransTime[h] = z;
+        printf("TransTime = %f\n", z);
         Trans[h] = 0;
         state[h] = 1;
         
@@ -99,7 +105,7 @@ void WaitForNext(int h) {
 }
 
 void DIFS2(int h) { 
-    printf("Current State DIFS2 = %d\n", state[h]);
+    printf("Current State DIFS2 = %d\n", DIFS[h]);
     DIFS[h] = DIFS[h] - 1;
     if(DIFS[h] == 0){
         channelavailable = 0; // initial DIFS complete. channel has been claimed.
