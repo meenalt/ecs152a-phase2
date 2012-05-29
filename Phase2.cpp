@@ -86,7 +86,7 @@ void WaitForNext(int h) {
         //double y = FrameLength[h] * x;
         double z = (y*x);
         TransTime[h] = z;
-        printf("TransTime = %f\n", z);
+        printf("TransTime = %d\n", TransTime[h]);
         Trans[h] = 0;
         state[h] = 1;
         
@@ -105,16 +105,17 @@ void WaitForNext(int h) {
 }
 
 void DIFS2(int h) { 
-    printf("Current State DIFS2 = %d\n", DIFS[h]);
+    //printf("Current State DIFS2 = %d\n", DIFS[h]);
     DIFS[h] = DIFS[h] - 1;
-    if(DIFS[h] == 0){
+    if(DIFS[h] == 1){
         channelavailable = 0; // initial DIFS complete. channel has been claimed.
         state[h] = 2;
+        printf("Now in state[2] for HOST %d\n", h);
     }
 }
 
 void Transmitting(int h) {
-   // printf("Current State Transmitting = %d\n", state[h]);
+    //printf("Current State Transmitting = %d\n", state[h]);
     Trans[h] = Trans[h] + 1;
     if(TransTime[h] == Trans[h]) state[h] = 3; //transmission complete. will wait for ACK.
 }
@@ -138,17 +139,17 @@ void WaitForACK(int h) {
 }
 
 void SmallBackoff(int h) {
-    printf("Current State SmallBackoff = %d\n", state[h]);
+    //printf("Current State SmallBackoff = %d\n", state[h]);
     Backoff[h] = Backoff[h] - 1;
-    if(Backoff[h] == 0) {
+    if(Backoff[h] == 1) {
       state[h] = 0;
     }
 }
 
 void BigBackoff(int h) {
-    printf("Current State BigBackoff = %d\n", state[h]);
+    //printf("Current State BigBackoff = %d\n", state[h]);
     Backoff[h] = Backoff[h] - 1;
-    if(Backoff[h] == 0) {
+    if(Backoff[h] == 1) {
         state[h] = 1;
         DIFS[h] = 10; 
     }
