@@ -17,7 +17,14 @@ double sizeGen(double rate)
   int size;
   size = timeGen(rate) * BANDWIDTH;
   if(size > 1544)
-  { return 1544; } else {return size;}
+  { return 1544; }
+  else
+  {
+    if(size < 0)
+    { return 1; }
+    else
+    { return size; }
+  }
 }
 
 Event* Event::Next()

@@ -112,7 +112,6 @@ void Simulate() {
 }
 void Stats()
 {
-  cout << transmitted << "       " << current_time << endl;
   cout << transmitted / current_time   << endl;
   cout << "Sus:  "  << susCount << "   FAIL:   " << failCount << endl;
   double totalTime = 0;
