@@ -71,13 +71,13 @@ void Simulate() {
   int count = 1;
   for(i = 1; i < hostNum; i++)
   {
-    if((hosts[i]->firstTime(current_time) < min) && (hosts[i]->firstTime( current_time ) >= 0))
+    if((hosts[i]->firstTime(current_time) < min))
     {
       min = hosts[i]->firstTime(current_time);
       minHost = i;
-      current_time = min;
     }
   }
+  current_time = min;
   Process(minHost);
   while(active > 0)
   {
@@ -112,14 +112,18 @@ void Simulate() {
 }
 void Stats()
 {
-  cout << transmitted / current_time   << endl;
+  double throughput = transmitted / current_time;
+  //cout << transmitted << "     " << transmitted/(eventNum * hostNum) << endl;
+  cout << "Throughput: " << throughput   << endl;
   cout << "Sus:  "  << susCount << "   FAIL:   " << failCount << endl;
   double totalTime = 0;
   for(int i = 0; i < hostNum; i++)
   {
     totalTime += hosts[i]->getTotalTime();
+  //  cout << i << "  QTime:  " << hosts[i]->getTotalTime() << endl;
   }
-  cout << "Average Network Delay: " << totalTime / hostNum << endl;
+  cout << "Total time: "  << totalTime << endl;
+  cout << "Average Network Delay: " << totalTime / throughput  << endl;
 }
 
 void Process(int processHost)
@@ -129,6 +133,9 @@ void Process(int processHost)
   bool conflict[hostNum];
   Event *processEvent = hosts[processHost]->getFirst();
   double processTime;
+
+//cout << "Prcoess:  " << current_time << "     " << hosts[processHost]->firstTime(1) << endl;
+
 if(processEvent == NULL)
   cout << "processprob\n";
 
@@ -231,7 +238,7 @@ if(processEvent == NULL)
     failCount++;
  //   cout << " fail    " << failCount << endl;; 
   } else { 
-    hosts[processHost]->remove();
+    hosts[processHost]->remove(current_time);
     if(hosts[processHost]->isEmpty())
       active--;
     susCount++;

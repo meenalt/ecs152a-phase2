@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "Event.h"
 
-#define BANDWIDTH 115343360.0
+#define BANDWIDTH 1441792.0
 
 double timeGen(double rate)
 {
@@ -14,6 +14,7 @@ double timeGen(double rate)
 
 double sizeGen(double rate)
 {
+  rate = 8223;
   int size;
   size = timeGen(rate) * BANDWIDTH;
   if(size > 1544)
@@ -117,6 +118,8 @@ void EventList::remove()
 {
     Event *temp = first;
     first = first->Next();
+if ((first != NULL)&&(temp->getTime() > first->getTime()))
+  cout << "Shits gonna happen\n";
     if( first == NULL )
       empty = true;
     delete temp;

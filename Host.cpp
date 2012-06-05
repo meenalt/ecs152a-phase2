@@ -79,7 +79,7 @@ void Host::updateBackoff()
   timeoutNum++;
   double u = drand48();
   backoff = (timeoutNum * T) * u;
-  queueingTime = backoff;
+  //queueingTime = backoff;
 }
 
 //Determines the time of the next request
@@ -151,8 +151,13 @@ void Host::updateTime( double time )
   lastTime = time;
 }
 
-void Host::remove()
+void Host::remove(double time)
 {
+  queueingTime += time - this->firstTime(time);
+//cout << time - this->firstTime(time) << endl;;
+  timeoutNum = 0;
+if(queueingTime < 0 )
+  cout << time << "     " << this->firstTime(time) << endl;
   if( !eventList->isEmpty() )
   {
     eventList->remove();
@@ -165,4 +170,4 @@ void Host::transmissionTime(double time)
 {  transmission += time; }
 
 double Host::getTotalTime()
-{  return (queueingTime + transmission); }
+{  return (queueingTime); }

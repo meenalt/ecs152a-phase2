@@ -32,7 +32,7 @@ public:
     void conflictHandler(double time, double processTime);
     void clearBackoff();
     void updateTime(double time);
-    void remove();
+    void remove(double time);
     void transmissionTime(double time);
     double getTotalTime();
 

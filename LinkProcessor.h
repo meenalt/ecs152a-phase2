@@ -2,7 +2,7 @@
 //  Header.h
 //  
 //
-//  Created by Meenal Tambe on 5/28/12.
+//  Created by Sanjay Tambe on 5/28/12.
 //  Copyright (c) 2012 University of California, Davis. All rights reserved.
 //
 
