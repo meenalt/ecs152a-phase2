@@ -25,14 +25,13 @@ int hostNum;	//Number of Hosts
 double current_time;	//Current time
 double ACKTIME;		//time to send an ACK
 int active;	//active number of hosts still transmitting
-int num;
 unsigned int transmitted;	//Number of bits transmitted
-int susCount;
-int failCount;
+int susCount;	//Sucessful transfer
+int failCount;	//Collision Counter
 
 int main(int argc, char *argv[]) {
 //rate, # of events, # of hosts, T
-susCount = failCount = 0;
+  susCount = failCount = 0;
   Initialize(argv);
   Simulate();
   Stats();
@@ -40,55 +39,60 @@ susCount = failCount = 0;
 }
 //Initilizes all the variable and generates all of the events
 void Initialize(char** argv) {
-  transmitted = 0;
-  num = 0;
+  //Seed
   srand48(time(NULL));
-  srand(time(NULL)); // Seeds
+
+  //Arguement loading
   double rate = atof(argv[1]);
   eventNum = atoi(argv[2]);
   hostNum = atoi(argv[3]);
+
+  //Initializes variables
   active = hostNum;
-  int i;
-  bool firstHost[hostNum];
   hosts = new Host*[hostNum];
   Event *event, *eventNew;
-  int hostSelector;
-  double arrival = 0;
-  for(i = 0; i < hostNum; i++)//Used for implementation purposes
+  transmitted = 0;	//Set number of transmitted bytes to 0
+
+  //Host generation including event generation
+  for(int i = 0; i < hostNum; i++)
   {
     hosts[i] = new Host(eventNum, atof(argv[4]), rate);
   }
+
+  //Calculates time for acks
   ACKTIME = (64*8)/BANDWIDTH;
 }
 
+//Begins the simulation of the network
 void Simulate() {
-  current_time = 0;
+  //Variable Declarations
   int i;
   double min;
   int minHost = 0;
-  min = hosts[0]->firstTime( current_time);
   bool firstEvent;
-  int count = 1;
+
+/*****************************
+  Simulation begin
+*****************************/
+
+  //First event process
+  current_time = 0;
+  min = hosts[0]->firstTime();
   for(i = 1; i < hostNum; i++)
   {
-    if((hosts[i]->firstTime(current_time) < min))
+    if((hosts[i]->firstTime() < min))
     {
-      min = hosts[i]->firstTime(current_time);
+      min = hosts[i]->firstTime();
       minHost = i;
     }
   }
   current_time = min;
   Process(minHost);
-  while(active > 0)
+
+  //Sucessive event process
+  while(active > 0)	
+  //Active denotes how many hosts still have events in need of processing
   {
-
-//DEBUG
-   // cout << count << endl;
-    count++;
-//DEBUG
-//if( count > 10000)
-//  cout << "infinite" << endl;
-
     firstEvent = true;
     for(i = 0; i < hostNum; i++)
     {
@@ -108,36 +112,35 @@ void Simulate() {
     }
     hosts[minHost]->clearBackoff();
     Process(minHost);
-  }
+  }//while
+/**************************************
+	Simulation End
+**************************************/
 }
+
+//Calculates the statistics used for the output
 void Stats()
 {
   double throughput = transmitted / current_time;
-  //cout << transmitted << "     " << transmitted/(eventNum * hostNum) << endl;
   cout << "Throughput: " << throughput   << endl;
-  cout << "Sus:  "  << susCount << "   FAIL:   " << failCount << endl;
   double totalTime = 0;
   for(int i = 0; i < hostNum; i++)
   {
     totalTime += hosts[i]->getTotalTime();
-  //  cout << i << "  QTime:  " << hosts[i]->getTotalTime() << endl;
   }
   cout << "Total time: "  << totalTime << endl;
   cout << "Average Network Delay: " << totalTime / throughput  << endl;
 }
 
+//Handles the event deemed to occur
 void Process(int processHost)
 {
+  //Variable initializations
   int i;
-  bool globalConflict = false;
-  bool conflict[hostNum];
+  bool globalConflict = false;	//Anytime this is true means there was a conflict
+  bool conflict[hostNum];	//keeps track of hosts that cause conflicts
   Event *processEvent = hosts[processHost]->getFirst();
   double processTime;
-
-//cout << "Prcoess:  " << current_time << "     " << hosts[processHost]->firstTime(1) << endl;
-
-if(processEvent == NULL)
-  cout << "processprob\n";
 
 //Check for simultaneous DIFS collisions
   for(i =0; i < hostNum; i++)
@@ -150,9 +153,10 @@ if(processEvent == NULL)
     }
   }
   current_time += DIFS;
+
+//DIFS handler if there was no conflict
   if( !globalConflict )  //not 2 things transmitted at same time
   {
-    hosts[processHost]->transmissionTime(DIFS);
     for(i = 0; i < hostNum; i++)
     {
       if( (i != processHost ) && (!hosts[i]->isEmpty()))
@@ -169,13 +173,12 @@ if(processEvent == NULL)
     hosts[processHost]->updateBackoff();
   }
 
-//No DIFS collisions thus handling packet
+//Packet transmission if there was no conflict during DIFS state
   if( !globalConflict )
   {
     processTime = (processEvent->getSize() * 8 ) / BANDWIDTH;
     transmitted += processEvent->getSize();
     current_time += processTime;
-    hosts[processHost]->transmissionTime(processTime);
     for(i = 0; i < hostNum; i++)
     {
       if( (i != processHost ) && (!hosts[i]->isEmpty()))
@@ -185,7 +188,7 @@ if(processEvent == NULL)
     }
   }
 
-//SIFS period
+//SIFS conflict detection
   if( !globalConflict )
   {
     for(i =0; i < hostNum; i++)
@@ -198,9 +201,10 @@ if(processEvent == NULL)
       }
     }
     current_time += SIFS;
-    if( !globalConflict )  //2 things transmitted at same time
+
+//SIFS handler if no collision
+    if( !globalConflict )
     {
-      hosts[processHost]->transmissionTime(SIFS);
       for(i = 0; i < hostNum; i++)
       {
         if( (i != processHost ) && (!hosts[i]->isEmpty()))
@@ -220,7 +224,6 @@ if(processEvent == NULL)
 //No SIFS collision so ACK handling
     if(!globalConflict)
     {
-      hosts[processHost]->transmissionTime(ACKTIME);
       current_time += ACKSIZE / BANDWIDTH;
       transmitted += ACKSIZE;
       for(i = 0; i < hostNum; i++)
@@ -242,14 +245,7 @@ if(processEvent == NULL)
     if(hosts[processHost]->isEmpty())
       active--;
     susCount++;
- //   cout << "sucess   " <<  susCount << endl;
+ //   cout << "suscess   " <<  susCount << endl;
   }
 }
 
-/*
-double timeGen(double rate)
-{
-  double u;
-  u = drand48();
-  return((-1/rate)*log(1-u));
-}*/
